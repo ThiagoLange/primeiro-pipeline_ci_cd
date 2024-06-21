@@ -1,9 +1,11 @@
 name: CI-CD
 on:
- push:
-     branches: ["main"]
- workflow_dispatch:
+    push:
+        branches: ["main"]
+    workflow_dispatch:
+
 jobs:
+
     CI:
         runs-on: ubuntu-latest
         steps:
@@ -23,22 +25,13 @@ jobs:
                 tags: |
                     thiagolange/aula-primeira-pipeline:v${{ github.run_number}}
                     thiagolange/aula-primeira-pipeline:latest
-    CD:
-        runs-on: ubuntu-latest
-        needs: [CI]
-        steps:
-        -   name: Obtendo o código
-            uses: actions/checkout@v4.1.5
-        -   name: Start minikube
-            uses: medyagh/setup-minikube@master
-        -   name: Try the cluster !
-            run: kubectl get pods 
-        -   name: Execução do Manifesto
-            uses: Azure/k8s-deploy@v5
-            with:
-                manifests: |
-                    ./k8s/deployment.yaml
-                images: |
-                    thiagolange/aula-primeira-pipeline:v${{ github.run_number }}
 
+    CD:
+        needs: [CI]
+        uses: ThiagoLange/primeiro-pipeline_ci_cd/.github/workflows/deploy.yml@main
+        with:
+            manifests: k8s/deployment.yaml
+            images: thiagolange/aula-primeira-pipeline:v${{ github.run_number}}
+        secrets: inherit
+       
 
